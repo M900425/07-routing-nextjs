@@ -8,7 +8,8 @@ import Modal from "../../components/Modal/Modal";
 import NoteForm from "../../components/NoteForm/NoteForm";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { useQuery } from "@tanstack/react-query";
-import { fetchNotes, NormalizedNotesResponse } from "../../lib/api";
+import { fetchNotes } from "../../lib/api";
+import { NormalizedNotesResponse } from "../../types/note";
 
 const PER_PAGE = 12;
 

@@ -1,76 +1,40 @@
-import axios, { AxiosResponse } from "axios";
-import type { Note } from "../types/note";
+import axios from "axios";
+import type { Note, NormalizedNotesResponse } from "../types/note";
 
-const BASE_URL = "https://notehub-public.goit.study/api";
 const TOKEN = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
-
-if (!TOKEN) throw new Error("NEXT_PUBLIC_NOTEHUB_TOKEN is not defined!");
+if (!TOKEN) throw new Error("Missing NEXT_PUBLIC_NOTEHUB_TOKEN env variable");
 
 const api = axios.create({
-  baseURL: BASE_URL,
-  headers: {
-    Authorization: `Bearer ${TOKEN}`,
-    "Content-Type": "application/json",
-  },
+  baseURL: "https://api.notehub.app",
+  headers: { Authorization: `Bearer ${TOKEN}` },
 });
 
-export interface NormalizedNotesResponse {
-  data: Note[];
-  meta: {
-    total: number;
-    page: number;
-    perPage: number;
-    totalPages: number;
-  };
-}
-
-function normalizeFetchResponse(
-  resp: AxiosResponse<{
-    notes?: Note[];
-    total?: number;
-    page?: number;
-    perPage?: number;
-    totalPages?: number;
-  }>
-): NormalizedNotesResponse {
-  const { notes = [], total = notes.length, page = 1, perPage = notes.length, totalPages = 1 } =
-    resp.data;
-
-  return {
-    data: notes,
-    meta: { total, page, perPage, totalPages },
-  };
-}
-
-export interface FetchNotesParams {
+export const fetchNotes = async ({
+  page = 1,
+  perPage = 12,
+  search = "",
+}: {
   page?: number;
   perPage?: number;
   search?: string;
-}
+}): Promise<NormalizedNotesResponse> => {
+  const { data } = await api.get<NormalizedNotesResponse>("/notes", {
+    params: { page, perPage, search },
+  });
+  return data;
+};
 
-export async function fetchNotes(params: FetchNotesParams = {}): Promise<NormalizedNotesResponse> {
-  const { page = 1, perPage = 12, search } = params;
-  const query: Record<string, string | number> = { page, perPage };
-  if (search) query.search = search;
+export const fetchNoteById = async (id: string): Promise<Note> => {
+  const { data } = await api.get<Note>(`/notes/${id}`);
+  return data;
+};
 
-  const resp = await api.get<{ notes: Note[]; total: number; page: number; perPage: number; totalPages: number }>(
-    "/notes",
-    { params: query }
-  );
-  return normalizeFetchResponse(resp);
-}
+export const createNote = async (note: Partial<Note>): Promise<Note> => {
+  const { data } = await api.post<Note>("/notes", note);
+  return data;
+};
 
-export async function createNote(payload: Pick<Note, "title" | "content" | "tag">): Promise<Note> {
-  const resp = await api.post<{ note?: Note; data?: Note }>("/notes", payload);
-  return resp.data.note ?? resp.data.data!;
-}
-
-export async function deleteNote(id: string): Promise<Note> {
-  const resp = await api.delete<{ note?: Note; data?: Note }>(`/notes/${id}`);
-  return resp.data.note ?? resp.data.data!;
-}
-
-export async function fetchNoteById(id: number): Promise<Note> {
-  const resp = await api.get<{ note?: Note; data?: Note }>(`/notes/${id}`);
-  return resp.data.note ?? resp.data.data!;
-}
+export const deleteNote = async (id: string): Promise<Note> => {
+  const { data } = await api.delete<Note>(`/notes/${id}`);
+  return data;
+};
