@@ -9,7 +9,7 @@ import NoteForm from "../../components/NoteForm/NoteForm";
 import useDebouncedValue from "../../hooks/useDebouncedValue";
 import { useQuery } from "@tanstack/react-query";
 import { fetchNotes } from "../../lib/api";
-import { NormalizedNotesResponse } from "../../types/note";
+import type { NormalizedNotesResponse } from "../../types/note";
 
 const PER_PAGE = 12;
 
@@ -25,11 +25,11 @@ export default function NotesClient() {
       queryFn: () =>
         fetchNotes({ page, perPage: PER_PAGE, search: debouncedSearch }),
       staleTime: 1000 * 60,
-      placeholderData: (prev) => prev,
+      refetchOnMount: false,
     }
   );
 
-  const totalPages = data?.meta.totalPages ?? 1;
+  const totalPages = data?.meta?.totalPages ?? 1;
   const notes = data?.data ?? [];
 
   return (
