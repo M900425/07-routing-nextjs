@@ -1,10 +1,8 @@
 import axios, { type AxiosResponse } from "axios";
-import type { Note, NormalizedNotesResponse } from "../types/note";
+import type { Note } from "../types/note";
 
 const BASE_URL = "https://notehub-public.goit.study/api";
 const TOKEN = process.env.NEXT_PUBLIC_NOTEHUB_TOKEN;
-
-if (!TOKEN) throw new Error("VITE_NOTEHUB_TOKEN is not defined!");
 
 const api = axios.create({
   baseURL: BASE_URL,
@@ -14,6 +12,16 @@ const api = axios.create({
   },
 });
 
+export interface NormalizedNotesResponse {
+  data: Note[];
+  meta: {
+    totalItems: number;
+    page: number;
+    perPage: number;
+    totalPages: number;
+  };
+}
+
 function normalizeFetchResponse(
   resp: AxiosResponse<{ notes?: Note[]; total?: number; page?: number; perPage?: number; totalPages?: number }>
 ): NormalizedNotesResponse {
@@ -21,7 +29,7 @@ function normalizeFetchResponse(
 
   return {
     data: notes,
-    meta: { totalItems: total, page, perPage, totalPages }, // <-- totalItems виправлено
+    meta: { totalItems: total, page, perPage, totalPages },
   };
 }
 
@@ -36,7 +44,11 @@ export async function fetchNotes(params: FetchNotesParams = {}): Promise<Normali
   const query: Record<string, string | number> = { page, perPage };
   if (search) query.search = search;
 
-  const resp = await api.get<{ notes?: Note[]; total?: number; page?: number; perPage?: number; totalPages?: number }>("/notes", { params: query });
+  const resp = await api.get<{ notes?: Note[]; total?: number; page?: number; perPage?: number; totalPages?: number }>(
+    "/notes",
+    { params: query }
+  );
+
   return normalizeFetchResponse(resp);
 }
 

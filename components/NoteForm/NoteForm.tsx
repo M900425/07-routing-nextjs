@@ -17,21 +17,24 @@ interface FormValues {
   tag: NoteTag;
 }
 
-// Валідація форми
 const schema = Yup.object().shape({
-  title: Yup.string().min(3, "Min 3 chars").max(50, "Max 50 chars").required("Required"),
+  title: Yup.string()
+    .min(3, "Min 3 chars")
+    .max(50, "Max 50 chars")
+    .required("Required"),
   content: Yup.string().max(500, "Max 500 chars"),
-  tag: Yup.mixed<NoteTag>().oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"]).required("Required"),
+  tag: Yup.mixed<NoteTag>()
+    .oneOf(["Todo", "Work", "Personal", "Meeting", "Shopping"])
+    .required("Required"),
 });
 
 const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
   const qc = useQueryClient();
 
-  // Мутація для створення нотатки
   const mutation = useMutation<Note, Error, FormValues>({
     mutationFn: (payload: FormValues) => createNote(payload),
     onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["notes"] }); // правильно типізовано
+      qc.invalidateQueries({ queryKey: ["notes"] });
       onSuccess?.();
     },
   });
@@ -57,8 +60,18 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
 
           <div className={css.formGroup}>
             <label htmlFor="content">Content</label>
-            <Field as="textarea" id="content" name="content" rows={8} className={css.textarea} />
-            <ErrorMessage name="content" component="span" className={css.error} />
+            <Field
+              as="textarea"
+              id="content"
+              name="content"
+              rows={8}
+              className={css.textarea}
+            />
+            <ErrorMessage
+              name="content"
+              component="span"
+              className={css.error}
+            />
           </div>
 
           <div className={css.formGroup}>
@@ -74,10 +87,18 @@ const NoteForm: React.FC<NoteFormProps> = ({ onSuccess, onCancel }) => {
           </div>
 
           <div className={css.actions}>
-            <button type="button" className={css.cancelButton} onClick={onCancel}>
+            <button
+              type="button"
+              className={css.cancelButton}
+              onClick={onCancel}
+            >
               Cancel
             </button>
-            <button type="submit" className={css.submitButton} disabled={isSubmitting}>
+            <button
+              type="submit"
+              className={css.submitButton}
+              disabled={isSubmitting}
+            >
               {isSubmitting ? "Creating..." : "Create note"}
             </button>
           </div>

@@ -8,13 +8,3 @@ export interface Note {
   createdAt: string;
   updatedAt: string;
 }
-
-export interface NormalizedNotesResponse {
-  data: Note[];
-  meta: {
-    totalPages: number;
-    totalItems: number;
-    page: number;
-    perPage: number;
-  };
-}
