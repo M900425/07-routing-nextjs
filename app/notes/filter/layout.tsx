@@ -3,11 +3,11 @@ export default function FilterLayout({
   sidebar,
 }: {
   children: React.ReactNode;
-  sidebar: React.ReactNode;
+  sidebar?: React.ReactNode;
 }) {
   return (
     <div style={{ display: "flex", gap: "20px" }}>
-      <aside style={{ width: "200px" }}>{sidebar}</aside>
+      <aside style={{ width: "200px" }}>{sidebar ?? null}</aside>
       <main style={{ flex: 1 }}>{children}</main>
     </div>
   );
