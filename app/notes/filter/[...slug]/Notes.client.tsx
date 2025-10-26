@@ -1,25 +1,78 @@
 "use client";
-import { usePathname } from "next/navigation";
+
+import React, { useState } from "react";
+import NoteList from "@/components/NoteList/NoteList";
+import SearchBox from "@/components/SearchBox/SearchBox";
+import Pagination from "@/components/Pagination/Pagination";
+import Modal from "@/components/Modal/Modal";
+import NoteForm from "@/components/NoteForm/NoteForm";
+import useDebouncedValue from "@/hooks/useDebouncedValue";
 import { useQuery } from "@tanstack/react-query";
-import { fetchNotes } from "../../../../lib/api";
-import NoteList from "../../../../components/NoteList/NoteList";
+import { fetchNotes, NormalizedNotesResponse } from "@/lib/api";
+import styles from "../../NotesPage.module.css";
 
-export default function NotesClient() {
-  const pathname = usePathname();
-  const slug = pathname.split("/").pop();
-  const tag = slug === "all" ? undefined : slug;
+interface NotesClientProps {
+  initialTag: string;
+}
 
-  const {
-    data: notesData,
-    isLoading,
-    error,
-  } = useQuery({
-    queryKey: ["notes", tag],
-    queryFn: () => fetchNotes(tag ? { search: tag } : {}),
+const PER_PAGE = 12;
+
+export default function NotesClient({ initialTag }: NotesClientProps) {
+  const [page, setPage] = useState(1);
+  const [search, setSearch] = useState("");
+  const [isModalOpen, setIsModalOpen] = useState(false);
+  const debouncedSearch = useDebouncedValue(search, 500);
+
+  const { data, isLoading, isError } = useQuery<NormalizedNotesResponse>({
+    queryKey: ["notes", initialTag, page, PER_PAGE, debouncedSearch],
+    queryFn: () =>
+      fetchNotes({
+        page,
+        perPage: PER_PAGE,
+        search: debouncedSearch,
+        tag: initialTag === "all" ? undefined : initialTag,
+      }),
+    staleTime: 1000 * 60,
   });
 
-  if (isLoading) return <p>Loading...</p>;
-  if (error) return <p>Error loading notes.</p>;
+  const totalPages = data?.meta?.totalPages ?? 1;
 
-  return <NoteList notes={notesData?.data || []} />;
+  return (
+    <div className={styles.app}>
+      <header className={styles.toolbar}>
+        <SearchBox
+          value={search}
+          onChange={(v) => {
+            setSearch(v);
+            setPage(1);
+          }}
+        />
+        {totalPages > 1 && (
+          <Pagination
+            page={page}
+            totalPages={totalPages}
+            onPageChange={setPage}
+          />
+        )}
+        <button className={styles.button} onClick={() => setIsModalOpen(true)}>
+          Create note +
+        </button>
+      </header>
+
+      <main>
+        {isLoading && <p>Loading notes...</p>}
+        {isError && <p>Error loading notes.</p>}
+        {data && <NoteList notes={data.data} />}
+      </main>
+
+      {isModalOpen && (
+        <Modal onClose={() => setIsModalOpen(false)}>
+          <NoteForm
+            onSuccess={() => setIsModalOpen(false)}
+            onCancel={() => setIsModalOpen(false)}
+          />
+        </Modal>
+      )}
+    </div>
+  );
 }

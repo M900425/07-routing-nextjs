@@ -1,17 +1,11 @@
-import NoteList from "@/components/NoteList/NoteList";
-import { fetchNotes } from "@/lib/api";
+import NotesClient from "./Notes.client";
 
-export default async function FilteredNotesPage({
-  params,
-}: {
-  params: { tag?: string[] };
-}) {
-  const tag = params.tag?.[0];
+interface FilteredNotesPageProps {
+  params: { slug?: string[] };
+}
 
-  const data =
-    tag && tag !== "all"
-      ? await fetchNotes({ search: tag }) // фільтрований запит
-      : await fetchNotes(); // всі нотатки
+export default function FilteredNotesPage({ params }: FilteredNotesPageProps) {
+  const tag = params?.slug?.[0] ?? "all";
 
-  return <NoteList notes={data.data} />;
+  return <NotesClient initialTag={tag} />;
 }
